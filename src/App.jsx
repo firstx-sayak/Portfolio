@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 
 import BackgroundPattern from './components/BackgroundPattern';
 import HeroSection from './components/HeroSection';
@@ -15,98 +14,160 @@ const smoothStep = (v) => {
 };
 
 const Portfolio = () => {
-  const mountRef = useRef(null);
   const scrollTargetRef = useRef(0);
+  const scrollValueRef = useRef(0);
   const scrollRafRef = useRef(null);
   const scrollDirectionRef = useRef(1);
+  const metricsRef = useRef({
+    heroScale: Number.NaN,
+    heroOpacity: Number.NaN,
+    heroTranslate: Number.NaN,
+    finmindScale: Number.NaN,
+    finmindOpacity: Number.NaN,
+    finmindTranslate: Number.NaN,
+    finmindBackdrop: Number.NaN,
+    workflowTranslate: Number.NaN,
+    workflowScale: Number.NaN,
+    workflowOpacity: Number.NaN,
+    techStackOpacity: Number.NaN,
+    bgAngle: Number.NaN,
+    bgDarkness: Number.NaN,
+    bgRedIntensity: Number.NaN,
+    patternWordOpacity: Number.NaN,
+  });
 
-  const [smoothScrollY, setSmoothScrollY] = useState(0);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentDate(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const root = document.documentElement;
+    const rootStyle = root.style;
+    const metrics = metricsRef.current;
 
-  // Smoothed scroll tracking
-  useEffect(() => {
-    const updateScroll = () => {
-      setSmoothScrollY((prev) => {
-        const target = scrollTargetRef.current;
-        // slightly stronger easing, quantize to reduce re-renders
-        const next = prev + (target - prev) * 0.18;
-        const nextQ = Math.round(next * 2) / 2; // 0.5px steps
-        const direction = target > prev ? 1 : target < prev ? -1 : scrollDirectionRef.current;
-        scrollDirectionRef.current = direction;
-        if (Math.abs(target - nextQ) < 0.5) {
-          scrollRafRef.current = null;
-          return target;
-        }
-        scrollRafRef.current = requestAnimationFrame(updateScroll);
-        return nextQ;
-      });
+    const setNumericVar = (key, cssVar, value, { precision = 3, threshold = 0.002, suffix = '' } = {}) => {
+      const last = metrics[key];
+      if (Number.isFinite(last) && Math.abs(last - value) < threshold) return;
+      metrics[key] = value;
+      const formatted = suffix ? `${value.toFixed(precision)}${suffix}` : value.toFixed(precision);
+      rootStyle.setProperty(cssVar, formatted);
     };
 
-    const handleScroll = () => {
-      scrollTargetRef.current = window.scrollY;
-      if (!scrollRafRef.current) {
-        scrollRafRef.current = requestAnimationFrame(updateScroll);
+    const initialScroll = window.scrollY || 0;
+    scrollTargetRef.current = initialScroll;
+    scrollValueRef.current = initialScroll;
+
+    const applyMetrics = (value) => {
+      const heroProgress = smoothStep(value / 520);
+      const heroScale = Math.max(0.42, 1 - heroProgress * 0.6);
+      const heroOpacity = Math.max(0, 1 - heroProgress * 1.05);
+      const heroTranslate = Math.min(value * 0.4, 140);
+
+      const finmindProgress = smoothStep((value - 320) / 520);
+      const finmindScale = 0.86 + finmindProgress * 0.14;
+      const finmindOpacity = finmindProgress;
+      const gradientReveal = smoothStep((value - 160) / 360);
+
+      const workflowProgress = smoothStep((value - 820) / 520);
+      const finmindTranslateBase = (1 - finmindProgress) * 120;
+      const finmindReturnBoost = workflowProgress * 120;
+      const finmindDirection = scrollDirectionRef.current;
+      const finmindTranslate = finmindDirection >= 0
+        ? finmindTranslateBase
+        : -(finmindTranslateBase + finmindReturnBoost);
+      const finmindBackdrop = Math.max(gradientReveal, finmindOpacity);
+
+      const workflowTranslate = (1 - workflowProgress) * 140;
+      const workflowScale = 0.82 + workflowProgress * 0.18;
+      const workflowOpacity = 0.38 + workflowProgress * 0.62;
+
+      const techStackProgress = smoothStep((value - 1500) / 520);
+      const techStackOpacity = 0.55 + techStackProgress * 0.45;
+
+      const bgAngle = Math.min(48, 14 + value * 0.07);
+      const bgDarkness = Math.max(0.22, 1 - value * 0.0009);
+      const bgRedIntensity = Math.min(0.2 + gradientReveal * 0.45, 0.5);
+      const wordOpacity = Math.max(0.06, Math.min(0.18, 0.08 + gradientReveal * 0.14));
+
+      setNumericVar('heroScale', '--hero-scale', heroScale, { threshold: 0.0015 });
+      setNumericVar('heroOpacity', '--hero-opacity', heroOpacity, { threshold: 0.01 });
+      setNumericVar('heroTranslate', '--hero-translate', heroTranslate, { precision: 2, threshold: 0.75, suffix: 'px' });
+
+      setNumericVar('finmindScale', '--finmind-scale', finmindScale, { threshold: 0.0015 });
+      setNumericVar('finmindOpacity', '--finmind-opacity', finmindOpacity, { threshold: 0.01 });
+      setNumericVar('finmindTranslate', '--finmind-translate', finmindTranslate, { precision: 2, threshold: 0.75, suffix: 'px' });
+      setNumericVar('finmindBackdrop', '--finmind-backdrop', finmindBackdrop, { threshold: 0.01 });
+
+      setNumericVar('workflowTranslate', '--workflow-translate', workflowTranslate, { precision: 2, threshold: 0.75, suffix: 'px' });
+      setNumericVar('workflowScale', '--workflow-scale', workflowScale, { threshold: 0.002 });
+      setNumericVar('workflowOpacity', '--workflow-opacity', workflowOpacity, { threshold: 0.01 });
+
+      setNumericVar('techStackOpacity', '--techstack-opacity', techStackOpacity, { threshold: 0.01 });
+
+      setNumericVar('bgAngle', '--bg-angle', bgAngle, { precision: 2, threshold: 0.45, suffix: 'deg' });
+      setNumericVar('bgDarkness', '--bg-darkness', bgDarkness, { threshold: 0.01 });
+      setNumericVar('bgRedIntensity', '--bg-red-intensity', bgRedIntensity, { threshold: 0.01 });
+      setNumericVar('patternWordOpacity', '--pattern-word-opacity', wordOpacity, { threshold: 0.01 });
+    };
+
+    applyMetrics(initialScroll);
+
+    const update = () => {
+      const target = scrollTargetRef.current;
+      const previous = scrollValueRef.current;
+      const diff = target - previous;
+
+      if (Math.abs(diff) < 0.5) {
+        scrollValueRef.current = target;
+      } else {
+        scrollValueRef.current = previous + diff * 0.16;
+      }
+
+      const currentValue = scrollValueRef.current;
+      const direction = target > previous ? 1 : target < previous ? -1 : scrollDirectionRef.current;
+      scrollDirectionRef.current = direction;
+
+      applyMetrics(currentValue);
+
+      if (Math.abs(target - currentValue) >= 0.5) {
+        scrollRafRef.current = requestAnimationFrame(update);
+      } else {
+        scrollRafRef.current = null;
       }
     };
 
-    scrollTargetRef.current = window.scrollY;
-    setSmoothScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+    const handleScroll = () => {
+      const nextTarget = window.scrollY || 0;
+      if (Math.abs(nextTarget - scrollTargetRef.current) < 0.5) return;
+      scrollTargetRef.current = nextTarget;
+      if (!scrollRafRef.current) {
+        scrollRafRef.current = requestAnimationFrame(update);
+      }
     };
-  }, []);
 
-  // Tiny THREE background particles for the hero logo
-  useEffect(() => {
-    if (!mountRef.current) return;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    camera.position.z = 6;
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-    renderer.setSize(400, 400);
-    renderer.setClearColor(0x000000, 0);
-    mountRef.current.appendChild(renderer.domElement);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (scrollRafRef.current) {
+          cancelAnimationFrame(scrollRafRef.current);
+          scrollRafRef.current = null;
+        }
+      } else {
+        scrollTargetRef.current = window.scrollY || 0;
+        if (!scrollRafRef.current) {
+          scrollRafRef.current = requestAnimationFrame(update);
+        }
+      }
+    };
 
-    const particles = [];
-    for (let i = 0; i < 30; i++) {
-      const geometry = new THREE.SphereGeometry(0.02, 8, 8);
-      const material = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().setHSL(0, 1, 0.5 + Math.random() * 0.5),
-        transparent: true,
-        opacity: 0.4,
-      });
-      const p = new THREE.Mesh(geometry, material);
-      p.position.x = (Math.random() - 0.5) * 8;
-      p.position.y = (Math.random() - 0.5) * 8;
-      p.position.z = (Math.random() - 0.5) * 5;
-      particles.push(p);
-      scene.add(p);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    if (!scrollRafRef.current) {
+      scrollRafRef.current = requestAnimationFrame(update);
     }
 
-    const animate = () => {
-      requestAnimationFrame(animate);
-      particles.forEach((p, i) => {
-        p.rotation.x += 0.01;
-        p.rotation.y += 0.01;
-        p.position.y += Math.sin(Date.now() * 0.001 + i) * 0.008;
-        p.position.x += Math.cos(Date.now() * 0.0008 + i) * 0.005;
-      });
-      renderer.render(scene, camera);
-    };
-    animate();
-
     return () => {
-      if (mountRef.current && renderer.domElement) mountRef.current.removeChild(renderer.domElement);
-      renderer.dispose();
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+      scrollRafRef.current = null;
     };
   }, []);
 
@@ -118,67 +179,33 @@ const Portfolio = () => {
   };
 
   const techStack = [
-    { name: 'LangChain', logo: '🧠' },
-    { name: 'OpenAI', logo: '⚙️' },
-    { name: 'Mistral', logo: '🌬️' },
-    { name: 'Neo4j', logo: '🕸️' },
-    { name: 'ChromaDB', logo: '🟪' },
-    { name: 'Groq', logo: '🚀' },
-    { name: 'HuggingFace', logo: '🤗' },
-    { name: 'LlamaIndex', logo: '🦙' },
-    { name: 'PostgreSQL', logo: '🐘' },
-    { name: 'Python', logo: '🐍' },
-    { name: 'Streamlit', logo: '📊' },
-    { name: 'Docker', logo: '🐳' },
-    { name: 'AWS', logo: '☁️' },
+    { name: 'LangChain', logo: 'LC' },
+    { name: 'OpenAI', logo: 'OA' },
+    { name: 'Mistral', logo: 'MI' },
+    { name: 'Neo4j', logo: 'N4' },
+    { name: 'ChromaDB', logo: 'CD' },
+    { name: 'Groq', logo: 'GQ' },
+    { name: 'Hugging Face', logo: 'HF' },
+    { name: 'LlamaIndex', logo: 'LI' },
+    { name: 'PostgreSQL', logo: 'PG' },
+    { name: 'Python', logo: 'PY' },
+    { name: 'Streamlit', logo: 'ST' },
+    { name: 'Docker', logo: 'DK' },
+    { name: 'AWS', logo: 'AW' },
   ];
-
-  // Eased progress values for sections
-  const heroProgress = smoothStep(smoothScrollY / 520);
-  const heroScale = Math.max(0.35, 1 - heroProgress * 0.7);
-  const heroOpacity = Math.max(0, 1 - heroProgress * 1.05);
-
-  const finmindProgress = smoothStep((smoothScrollY - 320) / 520);
-  const finmindScale = 0.82 + finmindProgress * 0.18;
-  const finmindOpacity = finmindProgress;
-  const gradientReveal = smoothStep((smoothScrollY - 160) / 360);
-  // Drive FinMind's inner stagger directly from its section progress
-  const finmindDetailSmooth = finmindProgress;
-
-  const workflowProgress = smoothStep((smoothScrollY - 820) / 520);
-  const finmindTranslateBase = (1 - finmindProgress) * 160;
-  const finmindReturnBoost = workflowProgress * 160;
-  const finmindTranslate = scrollDirectionRef.current >= 0 ? finmindTranslateBase : -(finmindTranslateBase + finmindReturnBoost);
-  const finmindBackdropIntensity = Math.max(gradientReveal, finmindOpacity);
-
-  const workflowTranslate = (1 - workflowProgress) * 180;
-  const workflowScale = 0.78 + workflowProgress * 0.22;
-  const workflowOpacity = 0.25 + workflowProgress * 0.75;
-
-  const techStackProgress = smoothStep((smoothScrollY - 1500) / 520);
-  const techStackOpacity = 0.45 + techStackProgress * 0.55;
 
   return (
     <div className="bg-black text-white overflow-x-hidden">
-      <BackgroundPattern scrollY={smoothScrollY} gradientReveal={gradientReveal} />
-      <HeroSection heroScale={heroScale} heroOpacity={heroOpacity} scrollY={smoothScrollY} mountRef={mountRef} />
-      <FinMindSection
-        scale={finmindScale}
-        opacity={finmindOpacity}
-        translateY={finmindTranslate}
-        backdropIntensity={finmindBackdropIntensity}
-        detailProgress={finmindDetailSmooth}
-      />
+      <BackgroundPattern />
+      <HeroSection />
+      <FinMindSection />
       <WorkflowSolutionsSection
-        translateY={workflowTranslate}
-        opacity={workflowOpacity}
-        scale={workflowScale}
         formData={formData}
         setFormData={setFormData}
         handleFormSubmit={handleFormSubmit}
       />
-      <TechStackSection opacity={techStackOpacity} techStack={techStack} />
-      <PortfolioFooter currentDate={currentDate} />
+      <TechStackSection techStack={techStack} />
+      <PortfolioFooter />
     </div>
   );
 };

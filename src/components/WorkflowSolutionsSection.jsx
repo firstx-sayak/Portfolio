@@ -1,12 +1,12 @@
 import React from 'react';
 import { Brain, Database, Zap, Mail, MessageSquare, User } from 'lucide-react';
 
-const WorkflowSolutionsSection = ({ translateY, opacity, scale, formData, setFormData, handleFormSubmit }) => (
+const WorkflowSolutionsSection = ({ formData, setFormData, handleFormSubmit }) => (
   <section
-    className="min-h-screen flex items-center justify-center py-24"
+    className="workflow-section min-h-screen flex items-center justify-center py-24"
     style={{
-      transform: `translateY(${translateY}px) scale(${scale})`,
-      opacity,
+      transform: 'translateY(var(--workflow-translate, 0px)) scale(var(--workflow-scale, 1))',
+      opacity: 'var(--workflow-opacity, 1)',
       transition: 'transform 0.6s ease, opacity 0.6s ease'
     }}
   >
@@ -90,6 +90,12 @@ const WorkflowSolutionsSection = ({ translateY, opacity, scale, formData, setFor
     </div>
 
     <style jsx>{`
+      .workflow-section {
+        content-visibility: auto;
+        contain: layout paint style;
+        contain-intrinsic-size: 960px 1000px;
+      }
+
       .workflow-card {
         background: linear-gradient(165deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.82));
         border: 1px solid rgba(248, 113, 113, 0.3);

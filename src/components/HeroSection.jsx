@@ -1,12 +1,31 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
+const HeroSection = () => {
+  const sectionRef = useRef(null);
+  const [isActive, setIsActive] = useState(true);
   const extrusionLayers = useMemo(() => Array.from({ length: 28 }, (_, i) => i + 1), []);
-  const heroTranslate = Math.min(scrollY * 0.4, 140);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsActive(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <section className="h-screen relative flex flex-col justify-center overflow-hidden">
+    <section
+      ref={sectionRef}
+      className={`hero-shell h-screen relative flex flex-col justify-center overflow-hidden ${isActive ? 'hero-active' : 'hero-paused'}`}
+    >
       <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none firstx-marquee">
         <div className="firstx-marquee-track">
           {[0, 1].map((segment) => (
@@ -24,8 +43,8 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
       <div
         className="container mx-auto px-6 flex items-center justify-between relative z-20 mt-32 min-h-[60vh]"
         style={{
-          transform: `translateY(${heroTranslate}px) scale(${heroScale})`,
-          opacity: heroOpacity,
+          transform: 'translateY(var(--hero-translate, 0px)) scale(var(--hero-scale, 1))',
+          opacity: 'var(--hero-opacity, 1)',
           transition: 'transform 0.5s ease-out, opacity 0.5s ease-out',
           willChange: 'transform, opacity'
         }}
@@ -49,11 +68,7 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
                 0px 0px 24px rgba(255, 255, 255, 0.22),
                 0px 0px 72px rgba(148, 163, 184, 0.55)
               `,
-              transform: `
-                perspective(1600px)
-                rotateX(9deg)
-                rotateY(-6deg)
-              `
+              transform: 'perspective(1600px) rotateX(9deg) rotateY(-6deg)'
             }}
           >
             Sayak<br />Majumder
@@ -62,20 +77,19 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
           <p
             className="text-xl md:text-2xl lg:text-3xl text-gray-200/90 max-w-xl"
             style={{
-              textShadow: `2px 2px 8px rgba(15, 15, 15, 0.85)`,
-              transform: `perspective(1200px) rotateX(6deg)`
+              textShadow: '2px 2px 8px rgba(15, 15, 15, 0.85)',
+              transform: 'perspective(1200px) rotateX(6deg)'
             }}
           >
             Data Scientist | AI Innovator | Founder
           </p>
 
           <div className="pt-8">
-            <ChevronDown className="w-10 h-10 animate-bounce text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.45)]" />
+            <ChevronDown className="w-10 h-10 hero-chevron text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.45)]" />
           </div>
         </div>
 
         <div className="flex-1 flex justify-center items-center relative">
-          <div ref={mountRef} className="absolute inset-0" />
           <div className="hero-logo-wrapper">
             <div className="hero-logo">
               {extrusionLayers.map((layer) => (
@@ -98,6 +112,18 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
       </div>
 
       <style jsx>{`
+        .hero-shell {
+          contain: layout paint style;
+        }
+
+        .hero-paused .hero-logo,
+        .hero-paused .firstx-marquee-track,
+        .hero-paused .hero-chevron,
+        .hero-paused .hero-logo::before,
+        .hero-paused .hero-logo::after {
+          animation-play-state: paused;
+        }
+
         .firstx-marquee {
           overflow: hidden;
           background: linear-gradient(180deg, rgba(18, 4, 4, 0.78), rgba(12, 3, 3, 0));
@@ -128,26 +154,10 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
           color: rgba(90, 12, 12, 0.78);
           text-shadow:
             0 0 14px rgba(220, 38, 38, 0.45),
-            0 0 28px rgba(127, 29, 29, 0.35),
-            0 0 54px rgba(88, 17, 17, 0.28);
-          filter: drop-shadow(0 4px 12px rgba(80, 10, 10, 0.32));
-          mix-blend-mode: screen;
-          white-space: nowrap;
-        }
-
-        @keyframes marqueeSlide {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0);
-          }
+            0 0 28px rgba(127, 29, 29, 0.35);
         }
 
         .hero-name {
-          font-family: 'Oswald', 'Bebas Neue', 'Anton', 'Impact', sans-serif;
-          text-transform: uppercase;
-          letter-spacing: 0.12em;
           position: relative;
         }
 
@@ -181,7 +191,7 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
         .hero-logo {
           position: relative;
           transform-style: preserve-3d;
-          animation: heroRotate 16s linear infinite;
+          animation: heroRotate 18s linear infinite;
           will-change: transform;
         }
 
@@ -236,39 +246,48 @@ const HeroSection = ({ heroScale, heroOpacity, scrollY, mountRef }) => {
           }
         }
 
+        @keyframes marqueeSlide {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+
+        .hero-logo::before,
+        .hero-logo::after {
+          content: '';
+          position: absolute;
+          inset: -6% -8%;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(239, 68, 68, 0.35), transparent 65%);
+          filter: blur(12px);
+          opacity: 0.6;
+          animation: pulse 4.5s ease-in-out infinite;
+        }
+
+        .hero-logo::after {
+          animation-delay: 1.8s;
+          filter: blur(18px);
+        }
+
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
+          0%, 100% { opacity: 0.75; }
+          50% { opacity: 0.4; }
         }
 
-        @keyframes float0 {
-          0%, 100% { transform: perspective(1000px) rotateX(10deg) rotateY(0deg) translateZ(20px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(15deg) rotateY(5deg) translateZ(25px) translateY(-10px); }
+        .hero-chevron {
+          animation: gentleBounce 3s ease-in-out infinite;
         }
 
-        @keyframes float1 {
-          0%, 100% { transform: perspective(1000px) rotateX(12deg) rotateY(2deg) translateZ(25px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(8deg) rotateY(-3deg) translateZ(30px) translateY(-8px); }
+        @keyframes gentleBounce {
+          0%, 100% { transform: translateY(0); opacity: 0.8; }
+          50% { transform: translateY(12px); opacity: 1; }
         }
 
-        @keyframes float2 {
-          0%, 100% { transform: perspective(1000px) rotateX(8deg) rotateY(-2deg) translateZ(30px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(18deg) rotateY(4deg) translateZ(35px) translateY(-12px); }
-        }
-
-        @keyframes float3 {
-          0%, 100% { transform: perspective(1000px) rotateX(15deg) rotateY(3deg) translateZ(35px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(5deg) rotateY(-5deg) translateZ(40px) translateY(-6px); }
-        }
-
-        @keyframes float4 {
-          0%, 100% { transform: perspective(1000px) rotateX(5deg) rotateY(-4deg) translateZ(40px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(20deg) rotateY(2deg) translateZ(45px) translateY(-14px); }
-        }
-
-        @keyframes float5 {
-          0%, 100% { transform: perspective(1000px) rotateX(18deg) rotateY(1deg) translateZ(45px) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(10deg) rotateY(-6deg) translateZ(50px) translateY(-16px); }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-logo,
+          .firstx-marquee-track,
+          .hero-chevron {
+            animation: none;
+          }
         }
       `}</style>
     </section>

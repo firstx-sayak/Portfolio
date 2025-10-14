@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Brain, Database, Zap } from 'lucide-react';
 
 const featureItems = [
@@ -19,62 +19,65 @@ const featureItems = [
   }
 ];
 
-const FinMindSection = ({
-  scale,
-  /* parent opacity is intentionally ignored to prevent whole-block fade */
-  translateY,
-  backdropIntensity,
-  detailProgress = 0,
-}) => {
-  const introThreshold = 0.08;
-  const featureThresholds = useMemo(() => [0.22, 0.42, 0.62], []);
-  const qaThreshold = 0.78;
-  const ctaThreshold = 0.9;
-
+const FinMindSection = () => {
+  const sectionRef = useRef(null);
   const [introVisible, setIntroVisible] = useState(false);
   const [featureVisible, setFeatureVisible] = useState(() => featureItems.map(() => false));
   const [qaVisible, setQaVisible] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
 
   useEffect(() => {
-    if (!introVisible && detailProgress >= introThreshold) {
-      setIntroVisible(true);
-    }
+    const node = sectionRef.current;
+    if (!node) return undefined;
 
-    setFeatureVisible((prev) => {
-      let next = prev;
-      featureThresholds.forEach((threshold, idx) => {
-        if (!next[idx] && detailProgress >= threshold) {
-          if (next === prev) {
-            next = [...prev];
-          }
-          next[idx] = true;
-        }
-      });
-      return next;
-    });
+    const timeouts = [];
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
 
-    if (!qaVisible && detailProgress >= qaThreshold) {
-      setQaVisible(true);
-    }
+        setIntroVisible(true);
+        featureItems.forEach((_, idx) => {
+          timeouts.push(
+            setTimeout(() => {
+              setFeatureVisible((prev) => {
+                if (prev[idx]) return prev;
+                const next = [...prev];
+                next[idx] = true;
+                return next;
+              });
+            }, idx * 160)
+          );
+        });
 
-    if (!ctaVisible && detailProgress >= ctaThreshold) {
-      setCtaVisible(true);
-    }
-  }, [detailProgress, introVisible, qaVisible, ctaVisible, featureThresholds]);
+        timeouts.push(setTimeout(() => setQaVisible(true), 600));
+        timeouts.push(setTimeout(() => setCtaVisible(true), 900));
+
+        observer.disconnect();
+      },
+      { threshold: 0.35 }
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      timeouts.forEach(clearTimeout);
+    };
+  }, []);
 
   return (
     <section
-      className="relative flex items-center justify-center py-28 md:py-36 overflow-hidden"
+      ref={sectionRef}
+      className="finmind-section relative flex items-center justify-center py-28 md:py-36 overflow-hidden"
       style={{
-        transform: `translateY(${translateY}px) scale(${scale})`,
-        opacity: 1,
+        transform: 'translateY(var(--finmind-translate, 0px)) scale(var(--finmind-scale, 1))',
+        opacity: 'var(--finmind-opacity, 1)',
         transition: 'transform 0.6s ease'
       }}
     >
       <div
         className="finmind-aura"
-        style={{ opacity: backdropIntensity }}
+        style={{ opacity: 'var(--finmind-backdrop, 0.6)' }}
         aria-hidden="true"
       />
 
@@ -128,19 +131,26 @@ const FinMindSection = ({
                 className="finmind-sample"
                 style={{
                   opacity: qaVisible ? 1 : 0,
-                  transform: qaVisible ? 'translateY(0)' : 'translateY(80px)',
-                  transition: 'transform 0.6s ease, opacity 0.6s ease'
+                  transform: qaVisible ? 'translateY(0)' : 'translateY(40px)',
+                  transition: 'transform 0.6s ease, opacity 0.6s ease',
+                  transitionDelay: qaVisible ? '0.25s' : '0s'
                 }}
               >
-                <div className="finmind-sample__prompt">
-                  <span className="finmind-sample__label">Desk prompt</span>
-                  <code>{'Which funds underperformed benchmark YTD, and why?'}</code>
+                <div>
+                  <span className="finmind-sample__label">PROMPT</span>
+                  <div className="finmind-sample__prompt">
+                    <code>
+                      FinMind, surface performance drift for all strategies &gt;$200M AUM with more than 50bps variance in the last 24 hours. Compare vs FX hedges.
+                    </code>
+                  </div>
                 </div>
+
                 <div className="finmind-sample__response">
-                  <span className="finmind-sample__label">FinMind</span>
                   <p>
-                    Underperformers: <strong>Frontier Growth</strong> (-3.4%) and <strong>Global Alpha</strong> (-1.9%).
-                    Sharpe ratios compressed due to FX hedges (+210bps drag) and delayed energy rebalance. Suggested actions are waiting in your execution queue.
+                    Showing <strong>12 strategies</strong> with variance &gt; 50bps. Largest deviation: <strong>Euro Macro</strong> (+110bps) due to EURCHF hedges breaking correlation. <strong>Latitude Credit</strong> (-80bps) triggered because loan-loss chatter from the Street hit the knowledge graph.
+                  </p>
+                  <p className="mt-4">
+                    Underperformers: <strong>Frontier Growth</strong> (-3.4%) and <strong>Global Alpha</strong> (-1.9%). Sharpe ratios compressed due to FX hedges (+210bps drag) and delayed energy rebalance. Suggested actions are waiting in your execution queue.
                   </p>
                 </div>
               </div>
@@ -164,6 +174,12 @@ const FinMindSection = ({
       </div>
 
       <style jsx>{`
+        .finmind-section {
+          content-visibility: auto;
+          contain: layout paint style;
+          contain-intrinsic-size: 960px 1200px;
+        }
+
         .finmind-aura {
           position: absolute;
           inset: -35% -25% -20%;

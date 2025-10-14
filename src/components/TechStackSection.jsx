@@ -1,10 +1,10 @@
 import React from 'react';
 
-const TechStackSection = ({ opacity, techStack }) => (
+const TechStackSection = ({ techStack }) => (
   <section
-    className="py-24"
+    className="techstack-section py-24"
     style={{
-      opacity,
+      opacity: 'var(--techstack-opacity, 1)',
       transition: 'opacity 0.6s ease'
     }}
   >
@@ -26,6 +26,12 @@ const TechStackSection = ({ opacity, techStack }) => (
     </div>
 
     <style jsx>{`
+      .techstack-section {
+        content-visibility: auto;
+        contain: layout paint style;
+        contain-intrinsic-size: 640px 720px;
+      }
+
       .tech-pill {
         display: flex;
         flex-direction: column;
