@@ -31,7 +31,7 @@ const TECH_STACK_STYLES = `
          align-items: center;
          gap: clamp(2rem, 4vw, 3.5rem);
          min-width: 200%;
-         transform: translateX(-50%);
+         transform: translateX(0);
          animation: techMarqueeSlide 22s linear infinite;
          will-change: transform;
        }
@@ -73,10 +73,10 @@ const TECH_STACK_STYLES = `
 
        @keyframes techMarqueeSlide {
          0% {
-           transform: translateX(-50%);
+           transform: translateX(0);
          }
          100% {
-           transform: translateX(0);
+           transform: translateX(-50%);
          }
        }
 

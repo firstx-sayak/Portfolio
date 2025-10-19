@@ -1,3 +1,4 @@
+import emailjs from "emailjs-com";
 import React, { forwardRef, memo } from 'react';
 // Targeted icon imports keep Vite from hoisting the full Lucide bundle into memory.
 import Brain from 'lucide-react/dist/esm/icons/brain.js';
@@ -66,10 +67,33 @@ const WORKFLOW_STYLES = `
 
 // memo keeps the section stable across Suspense resolves so the heavy gradient DOM only mounts once.
 const WorkflowSolutionsSection = memo(forwardRef(function WorkflowSolutionsSection(
-  { formData, setFormData, handleFormSubmit },
+  { formData, setFormData },
   forwardedRef
 ) {
   const sectionRef = useTransientWillChange(forwardedRef, 'transform', { active: true });
+    const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const result = await emailjs.send(
+        "service_feyrvdi",  // your Service ID
+        "template_9g8onle", // temporary placeholder, see below
+        {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+        },
+        "5am-lcEQ4W-_ZnCMl" // your Public Key
+      );
+
+      console.log("Email sent:", result.text);
+      alert("Message sent successfully!");
+      setFormData({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Failed to send message.");
+    }
+  };
 
   return (
     <section
@@ -118,7 +142,7 @@ const WorkflowSolutionsSection = memo(forwardRef(function WorkflowSolutionsSecti
                 placeholder="Your Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors autofill:!bg-black/50 autofill:!text-white"
                 required
               />
             </div>
@@ -130,7 +154,7 @@ const WorkflowSolutionsSection = memo(forwardRef(function WorkflowSolutionsSecti
                 placeholder="your@email.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors"
+                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors autofill:!bg-black/50 autofill:!text-white"
                 required
               />
             </div>
@@ -141,7 +165,7 @@ const WorkflowSolutionsSection = memo(forwardRef(function WorkflowSolutionsSecti
                 placeholder="Tell me about your project..."
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors h-32 resize-none"
+                className="w-full bg-black/50 border border-red-500/30 rounded-lg py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none transition-colors h-32 resize-none autofill:!bg-black/50 autofill:!text-white"
                 required
               />
             </div>
