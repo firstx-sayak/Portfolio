@@ -1,8 +1,12 @@
-import React, { forwardRef, useEffect, useMemo, useState } from 'react';
-import { Brain, Database, Zap } from 'lucide-react';
+import React, { forwardRef, memo, useEffect, useMemo, useState } from 'react';
+// Importing icons individually stops the dev bundler from caching thousands of unused glyphs.
+import Brain from 'lucide-react/dist/esm/icons/brain.js';
+import Database from 'lucide-react/dist/esm/icons/database.js';
+import Zap from 'lucide-react/dist/esm/icons/zap.js';
 import useTransientWillChange from '../hooks/useTransientWillChange';
 
-const featureItems = [
+// Freezing the feature list guarantees React can safely reuse the same references without cloning objects.
+const featureItems = Object.freeze([
   {
     icon: Database,
     title: 'Universal ingestion',
@@ -18,9 +22,140 @@ const featureItems = [
     title: 'Realtime copilots',
     description: 'Launch analysts that operate inside your workflows in minutes.'
   }
-];
+]);
 
-const FinMindSection = forwardRef((_, forwardedRef) => {
+// Caching the CSS string prevents Vite from generating large inline source maps on every refresh.
+const FINMIND_STYLES = `
+        .finmind-section {
+          content-visibility: auto;
+          contain: layout paint size style;
+          contain-intrinsic-size: 960px 1200px;
+          overflow: clip;
+        }
+
+        .finmind-aura {
+          position: absolute;
+          width: min(60vw, 960px);
+          height: min(60vw, 960px);
+          top: 45%;
+          left: 50%;
+          transform: translate(-50%, -45%);
+          overflow: hidden;
+          border-radius: 50%;
+          background: radial-gradient(circle at center,
+            rgba(239, 68, 68, 0.48),
+            rgba(30, 0, 0, 0.8) 48%,
+            rgba(0, 0, 0, 0.96) 80%);
+          filter: blur(140px);
+          transition: opacity 0.8s ease;
+          z-index: 0;
+        }
+
+        .finmind-grid {
+          display: grid;
+          gap: 1.5rem;
+          position: relative;
+        }
+
+        @media (min-width: 1024px) {
+          .finmind-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+          }
+        }
+
+        .finmind-node {
+          position: relative;
+          display: flex;
+          gap: 1.2rem;
+          align-items: flex-start;
+          padding: 1.5rem 1.75rem;
+          border-radius: 1.1rem;
+          border: 1px solid rgba(248, 113, 113, 0.18);
+          background: linear-gradient(155deg, rgba(15, 15, 15, 0.85), rgba(60, 6, 6, 0.6));
+          box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.12);
+          overflow: hidden;
+        }
+
+        .finmind-node__glow {
+          position: absolute;
+          inset: -18%;
+          background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), transparent 65%);
+          filter: blur(26px);
+          opacity: 0.75;
+          pointer-events: none;
+        }
+
+        .finmind-sample {
+          grid-column: span 2;
+          display: grid;
+          gap: 1.75rem;
+          padding: 2rem;
+          border-radius: 1.25rem;
+          border: 1px solid rgba(248, 113, 113, 0.18);
+          background: linear-gradient(160deg, rgba(0, 0, 0, 0.82), rgba(24, 0, 0, 0.6));
+          box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.12);
+        }
+
+        .finmind-sample__label {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-size: 0.65rem;
+          letter-spacing: 0.35em;
+          text-transform: uppercase;
+          color: rgba(248, 113, 113, 0.75);
+        }
+
+        .finmind-sample__prompt code {
+          display: block;
+          padding: 1.1rem 1.3rem;
+          border-radius: 0.9rem;
+          background: rgba(248, 113, 113, 0.08);
+          border: 1px solid rgba(248, 113, 113, 0.16);
+          color: rgb(134 239 172);
+          font-size: 0.9rem;
+        }
+
+        .finmind-sample__response {
+          background: rgba(0, 0, 0, 0.55);
+          border-radius: 0.9rem;
+          border: 1px solid rgba(248, 113, 113, 0.12);
+          padding: 1.6rem 1.8rem;
+          color: rgba(226, 232, 240, 0.92);
+          line-height: 1.7;
+          font-size: 0.95rem;
+        }
+
+        .finmind-sample__response strong {
+          color: rgba(248, 113, 113, 0.85);
+          font-weight: 600;
+        }
+
+        @media (max-width: 1023px) {
+          .finmind-sample {
+            grid-column: span 1;
+          }
+        }
+
+        .finmind-workflow-bridge {
+          position: absolute;
+          left: 50%;
+          bottom: -12vh;
+          width: 140vw;
+          max-width: 1600px;
+          height: clamp(200px, 24vh, 340px);
+          background: radial-gradient(ellipse at center, rgba(248, 113, 113, 0.32) 0%, rgba(34, 4, 4, 0.82) 45%, rgba(0, 0, 0, 0) 88%);
+          pointer-events: none;
+          transition: opacity 0.45s ease, transform 0.45s ease;
+          opacity: var(--bridge-opacity, 0);
+          transform: translate(-50%, calc(var(--bridge-opacity, 0) * -20px));
+          z-index: 4;
+        }
+      `;
+
+// memo ensures the section doesn't re-render during unrelated parent state changes, holding animated DOM steady.
+const FinMindSection = memo(forwardRef(function FinMindSection(_, forwardedRef) {
   const [introVisible, setIntroVisible] = useState(false);
   const [featureVisible, setFeatureVisible] = useState(() => featureItems.map(() => false));
   const [qaVisible, setQaVisible] = useState(false);
@@ -176,141 +311,14 @@ const FinMindSection = forwardRef((_, forwardedRef) => {
               <span className="h-px w-8 bg-white/70" aria-hidden="true" />
             </button>
           </div>
-        </div>
-      </div>
+         </div>
+       </div>
 
-      <div className="finmind-workflow-bridge" aria-hidden="true" />
+       <div className="finmind-workflow-bridge" aria-hidden="true" />
 
-      <style jsx>{`
-        .finmind-section {
-          content-visibility: auto;
-          contain: layout paint size style;
-          contain-intrinsic-size: 960px 1200px;
-          overflow: clip;
-        }
-
-        .finmind-aura {
-          position: absolute;
-          width: min(60vw, 960px);
-          height: min(60vw, 960px);
-          top: 45%;
-          left: 50%;
-          transform: translate(-50%, -45%);
-          overflow: hidden;
-          border-radius: 50%;
-          background: radial-gradient(circle at center,
-            rgba(239, 68, 68, 0.48),
-            rgba(30, 0, 0, 0.8) 48%,
-            rgba(0, 0, 0, 0.96) 80%);
-          filter: blur(140px);
-          transition: opacity 0.8s ease;
-          z-index: 0;
-        }
-
-        .finmind-grid {
-          display: grid;
-          gap: 1.5rem;
-          position: relative;
-        }
-
-        @media (min-width: 1024px) {
-          .finmind-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            align-items: start;
-          }
-        }
-
-        .finmind-node {
-          position: relative;
-          display: flex;
-          gap: 1.2rem;
-          align-items: flex-start;
-          padding: 1.5rem 1.75rem;
-          border-radius: 1.1rem;
-          border: 1px solid rgba(248, 113, 113, 0.18);
-          background: linear-gradient(155deg, rgba(15, 15, 15, 0.85), rgba(60, 6, 6, 0.6));
-          box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.12);
-          overflow: hidden;
-        }
-
-        .finmind-node__glow {
-          position: absolute;
-          inset: -18%;
-          background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.22), transparent 65%);
-          filter: blur(26px);
-          opacity: 0.75;
-          pointer-events: none;
-        }
-
-        .finmind-sample {
-          grid-column: span 2;
-          display: grid;
-          gap: 1.75rem;
-          padding: 2rem;
-          border-radius: 1.25rem;
-          border: 1px solid rgba(248, 113, 113, 0.18);
-          background: linear-gradient(160deg, rgba(0, 0, 0, 0.82), rgba(24, 0, 0, 0.6));
-          box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.12);
-        }
-
-        .finmind-sample__label {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          font-size: 0.65rem;
-          letter-spacing: 0.35em;
-          text-transform: uppercase;
-          color: rgba(248, 113, 113, 0.75);
-        }
-
-        .finmind-sample__prompt code {
-          display: block;
-          padding: 1.1rem 1.3rem;
-          border-radius: 0.9rem;
-          background: rgba(248, 113, 113, 0.08);
-          border: 1px solid rgba(248, 113, 113, 0.16);
-          color: rgb(134 239 172);
-          font-size: 0.9rem;
-        }
-
-        .finmind-sample__response {
-          background: rgba(0, 0, 0, 0.55);
-          border-radius: 0.9rem;
-          border: 1px solid rgba(248, 113, 113, 0.12);
-          padding: 1.6rem 1.8rem;
-          color: rgba(226, 232, 240, 0.92);
-          line-height: 1.7;
-          font-size: 0.95rem;
-        }
-
-        .finmind-sample__response strong {
-          color: rgba(248, 113, 113, 0.85);
-          font-weight: 600;
-        }
-
-        @media (max-width: 1023px) {
-          .finmind-sample {
-            grid-column: span 1;
-          }
-        }
-
-        .finmind-workflow-bridge {
-          position: absolute;
-          left: 50%;
-          bottom: -12vh;
-          width: 140vw;
-          max-width: 1600px;
-          height: clamp(200px, 24vh, 340px);
-          background: radial-gradient(ellipse at center, rgba(248, 113, 113, 0.32) 0%, rgba(34, 4, 4, 0.82) 45%, rgba(0, 0, 0, 0) 88%);
-          pointer-events: none;
-          transition: opacity 0.45s ease, transform 0.45s ease;
-          opacity: var(--bridge-opacity, 0);
-          transform: translate(-50%, calc(var(--bridge-opacity, 0) * -20px));
-          z-index: 4;
-        }
-      `}</style>
+       <style jsx>{FINMIND_STYLES}</style>
     </section>
   );
-});
+}));
 
 export default FinMindSection;

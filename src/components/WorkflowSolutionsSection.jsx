@@ -1,8 +1,74 @@
-import React, { forwardRef } from 'react';
-import { Brain, Database, Zap, Mail, MessageSquare, User } from 'lucide-react';
+import React, { forwardRef, memo } from 'react';
+// Targeted icon imports keep Vite from hoisting the full Lucide bundle into memory.
+import Brain from 'lucide-react/dist/esm/icons/brain.js';
+import Database from 'lucide-react/dist/esm/icons/database.js';
+import Zap from 'lucide-react/dist/esm/icons/zap.js';
+import Mail from 'lucide-react/dist/esm/icons/mail.js';
+import MessageSquare from 'lucide-react/dist/esm/icons/message-square.js';
+import User from 'lucide-react/dist/esm/icons/user.js';
 import useTransientWillChange from '../hooks/useTransientWillChange';
 
-const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleFormSubmit }, forwardedRef) => {
+// Hoisting styles prevents large template literals from bloating the dev server’s source maps.
+const WORKFLOW_STYLES = `
+        .workflow-section {
+          background: linear-gradient(180deg, rgba(32, 0, 0, 0.68) 0%, rgba(12, 0, 0, 0.9) 45%, rgba(0, 0, 0, 1) 100%);
+        }
+
+        .workflow-card {
+          background: linear-gradient(165deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.82));
+          border: 1px solid rgba(248, 113, 113, 0.3);
+          padding: 2rem;
+          border-radius: 1rem;
+          transition: transform 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
+          overflow: hidden;
+        }
+
+        .workflow-card:hover {
+          transform: translateY(-12px);
+          border-color: rgba(248, 113, 113, 0.55);
+          box-shadow: 0 22px 45px rgba(239, 68, 68, 0.25);
+        }
+
+        .workflow-transition-cap {
+          display: none;
+        }
+
+        @media (min-width: 1280px) {
+          .workflow-section {
+            overflow: hidden;
+            position: relative;
+          }
+
+          .workflow-intro,
+          .workflow-grid,
+          .workflow-cta {
+            transform: translateY(calc((1 - var(--workflow-opacity, 1)) * 40px));
+            opacity: var(--workflow-opacity, 1);
+            transition: transform 0.4s ease, opacity 0.4s ease;
+          }
+
+          .workflow-transition-cap {
+            display: block;
+            position: absolute;
+            top: -3rem;
+            left: 50%;
+            width: 160vw;
+            max-width: 2000px;
+            height: clamp(140px, 18vh, 260px);
+            background: radial-gradient(ellipse at center, rgba(236, 62, 62, 0.34) 0%, rgba(18, 2, 2, 0.85) 52%, rgba(0, 0, 0, 0) 88%);
+            pointer-events: none;
+            transform: translate(-50%, 0);
+            opacity: var(--cap-opacity, 0);
+            transition: opacity 0.35s ease;
+          }
+        }
+      `;
+
+// memo keeps the section stable across Suspense resolves so the heavy gradient DOM only mounts once.
+const WorkflowSolutionsSection = memo(forwardRef(function WorkflowSolutionsSection(
+  { formData, setFormData, handleFormSubmit },
+  forwardedRef
+) {
   const sectionRef = useTransientWillChange(forwardedRef, 'transform', { active: true });
 
   return (
@@ -92,62 +158,9 @@ const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleForm
 
       <div className="workflow-transition-cap" aria-hidden="true" />
 
-      <style jsx>{`
-        .workflow-section {
-          background: linear-gradient(180deg, rgba(32, 0, 0, 0.68) 0%, rgba(12, 0, 0, 0.9) 45%, rgba(0, 0, 0, 1) 100%);
-        }
-
-        .workflow-card {
-          background: linear-gradient(165deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.82));
-          border: 1px solid rgba(248, 113, 113, 0.3);
-          padding: 2rem;
-          border-radius: 1rem;
-          transition: transform 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
-          overflow: hidden;
-        }
-
-        .workflow-card:hover {
-          transform: translateY(-12px);
-          border-color: rgba(248, 113, 113, 0.55);
-          box-shadow: 0 22px 45px rgba(239, 68, 68, 0.25);
-        }
-
-        .workflow-transition-cap {
-          display: none;
-        }
-
-        @media (min-width: 1280px) {
-          .workflow-section {
-            overflow: hidden;
-            position: relative;
-          }
-
-          .workflow-intro,
-          .workflow-grid,
-          .workflow-cta {
-            transform: translateY(calc((1 - var(--workflow-opacity, 1)) * 40px));
-            opacity: var(--workflow-opacity, 1);
-            transition: transform 0.4s ease, opacity 0.4s ease;
-          }
-
-        .workflow-transition-cap {
-          display: block;
-          position: absolute;
-          top: -3rem;
-          left: 50%;
-          width: 160vw;
-          max-width: 2000px;
-          height: clamp(140px, 18vh, 260px);
-          background: radial-gradient(ellipse at center, rgba(236, 62, 62, 0.34) 0%, rgba(18, 2, 2, 0.85) 52%, rgba(0, 0, 0, 0) 88%);
-          pointer-events: none;
-          transform: translate(-50%, 0);
-          opacity: var(--cap-opacity, 0);
-          transition: opacity 0.35s ease;
-        }
-        }
-      `}</style>
+      <style jsx>{WORKFLOW_STYLES}</style>
     </section>
   );
-});
+}));
 
 export default WorkflowSolutionsSection;

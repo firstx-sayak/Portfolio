@@ -26,7 +26,11 @@ export default function useTransientWillChange(externalRef, property, opts = {})
     const node = localRef.current;
     if (!node) return undefined;
 
-    node.style.willChange = property;
+    // Scheduling the will-change update avoids thrashing the style attribute when Suspense mounts flip rapidly.
+    let frameId = window.requestAnimationFrame(() => {
+      if (!node.style || node.style.willChange === property) return;
+      node.style.willChange = property;
+    });
 
     const reset = () => {
       if (node && node.style) {
@@ -37,6 +41,7 @@ export default function useTransientWillChange(externalRef, property, opts = {})
     const timeoutId = window.setTimeout(reset, timeout);
 
     return () => {
+      window.cancelAnimationFrame(frameId);
       window.clearTimeout(timeoutId);
       reset();
     };

@@ -1,117 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { memo, useEffect, useRef, useState } from 'react';
+// Importing the specific Chevron icon keeps Vite from bundling the entire Lucide set, trimming module memory usage.
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down.js';
 
-const HeroSection = () => {
-  const sectionRef = useRef(null);
-  const [isActive, setIsActive] = useState(true);
-  const extrusionLayers = useMemo(() => Array.from({ length: 28 }, (_, i) => i + 1), []);
+// Hoisting the layer definitions avoids recreating the 28-element array, reducing retained allocations per dev refresh.
+const EXTRUSION_LAYERS = Object.freeze(Array.from({ length: 28 }, (_, i) => i + 1));
 
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node) return undefined;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsActive(entry.isIntersecting);
-      },
-      { threshold: 0.2 }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <section
-      ref={sectionRef}
-      className={`hero-shell h-screen relative flex flex-col justify-center overflow-hidden ${isActive ? 'hero-active' : 'hero-paused'}`}
-    >
-      <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none firstx-marquee">
-        <div className="firstx-marquee-track">
-          {[0, 1].map((segment) => (
-            <div key={segment} className="firstx-marquee-segment">
-              {['F', 'I', 'R', 'S', 'T', 'X'].map((letter) => (
-                <span key={`${segment}-${letter}`} className="firstx-letter select-none">
-                  {letter}
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div
-        className="container mx-auto px-6 flex items-center justify-between relative z-20 mt-32 min-h-[60vh]"
-        style={{
-          transform: 'translateY(var(--hero-translate, 0px)) scale(var(--hero-scale, 1))',
-          opacity: 'var(--hero-opacity, 1)',
-          transition: 'transform 0.5s ease-out, opacity 0.5s ease-out',
-          willChange: 'transform, opacity'
-        }}
-      >
-        <div className="flex-1 space-y-8 pr-6 md:pr-10">
-          <h1
-            className="hero-name text-5xl md:text-7xl lg:text-8xl font-bold leading-tight select-none"
-            style={{
-              background: `linear-gradient(120deg,
-                #ffffff 0%,
-                #f8fafc 12%,
-                #e2e8f0 35%,
-                #cbd5e1 55%,
-                #94a3b8 72%,
-                #64748b 90%)`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textShadow: `
-                4px 4px 0px rgba(15, 23, 42, 0.8),
-                0px 0px 24px rgba(255, 255, 255, 0.22),
-                0px 0px 72px rgba(148, 163, 184, 0.55)
-              `,
-              transform: 'perspective(1600px) rotateX(9deg) rotateY(-6deg)'
-            }}
-          >
-            Sayak<br />Majumder
-          </h1>
-
-          <p
-            className="text-xl md:text-2xl lg:text-3xl text-gray-200/90 max-w-xl"
-            style={{
-              textShadow: '2px 2px 8px rgba(15, 15, 15, 0.85)',
-              transform: 'perspective(1200px) rotateX(6deg)'
-            }}
-          >
-            Data Scientist | AI Innovator | Founder
-          </p>
-
-          <div className="pt-8">
-            <ChevronDown className="w-10 h-10 hero-chevron text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.45)]" />
-          </div>
-        </div>
-
-        <div className="flex-1 flex justify-center items-center relative">
-          <div className="hero-logo-wrapper">
-            <div className="hero-logo">
-              {extrusionLayers.map((layer) => (
-                <span
-                  key={layer}
-                  className="hero-logo-layer"
-                  style={{
-                    transform: `translateZ(${-layer * 3.5}px)`,
-                    opacity: Math.max(0.12, 1 - layer * 0.04)
-                  }}
-                  aria-hidden="true"
-                >
-                  FX
-                </span>
-              ))}
-              <span className="hero-logo-front">FX</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
+// Sharing the CSS string ensures React doesn't clone a large template literal on every render.
+const HERO_STYLES = `
         .hero-shell {
           contain: layout paint style;
         }
@@ -289,9 +184,120 @@ const HeroSection = () => {
             animation: none;
           }
         }
-      `}</style>
+      `;
+// memo ensures React keeps a single virtual tree instance, preventing repeated reconciliation of the 3D DOM stack.
+const HeroSection = memo(function HeroSection() {
+  const sectionRef = useRef(null);
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsActive((prev) => (prev === entry.isIntersecting ? prev : entry.isIntersecting));
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section
+      ref={sectionRef}
+      className={`hero-shell h-screen relative flex flex-col justify-center overflow-hidden ${isActive ? 'hero-active' : 'hero-paused'}`}
+    >
+      <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none firstx-marquee">
+        <div className="firstx-marquee-track">
+          {[0, 1].map((segment) => (
+            <div key={segment} className="firstx-marquee-segment">
+              {['F', 'I', 'R', 'S', 'T', 'X'].map((letter) => (
+                <span key={`${segment}-${letter}`} className="firstx-letter select-none">
+                  {letter}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="container mx-auto px-6 flex items-center justify-between relative z-20 mt-32 min-h-[60vh]"
+        style={{
+          transform: 'translateY(var(--hero-translate, 0px)) scale(var(--hero-scale, 1))',
+          opacity: 'var(--hero-opacity, 1)',
+          transition: 'transform 0.5s ease-out, opacity 0.5s ease-out',
+          willChange: 'transform, opacity'
+        }}
+      >
+        <div className="flex-1 space-y-8 pr-6 md:pr-10">
+          <h1
+            className="hero-name text-5xl md:text-7xl lg:text-8xl font-bold leading-tight select-none"
+            style={{
+              background: `linear-gradient(120deg,
+                #ffffff 0%,
+                #f8fafc 12%,
+                #e2e8f0 35%,
+                #cbd5e1 55%,
+                #94a3b8 72%,
+                #64748b 90%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: `
+                4px 4px 0px rgba(15, 23, 42, 0.8),
+                0px 0px 24px rgba(255, 255, 255, 0.22),
+                0px 0px 72px rgba(148, 163, 184, 0.55)
+              `,
+              transform: 'perspective(1600px) rotateX(9deg) rotateY(-6deg)'
+            }}
+          >
+            Sayak<br />Majumder
+          </h1>
+
+          <p
+            className="text-xl md:text-2xl lg:text-3xl text-gray-200/90 max-w-xl"
+            style={{
+              textShadow: '2px 2px 8px rgba(15, 15, 15, 0.85)',
+              transform: 'perspective(1200px) rotateX(6deg)'
+            }}
+          >
+            Data Scientist | AI Innovator | Founder
+          </p>
+
+          <div className="pt-8">
+            <ChevronDown className="w-10 h-10 hero-chevron text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.45)]" />
+          </div>
+        </div>
+
+        <div className="flex-1 flex justify-center items-center relative">
+          <div className="hero-logo-wrapper">
+            <div className="hero-logo">
+              {EXTRUSION_LAYERS.map((layer) => (
+                <span
+                  key={layer}
+                  className="hero-logo-layer"
+                  style={{
+                    transform: `translateZ(${-layer * 3.5}px)`,
+                    opacity: Math.max(0.12, 1 - layer * 0.04)
+                  }}
+                  aria-hidden="true"
+                >
+                  FX
+                </span>
+              ))}
+              <span className="hero-logo-front">FX</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{HERO_STYLES}</style>
     </section>
   );
-};
+});
 
 export default HeroSection;
