@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 import { Brain, Database, Zap } from 'lucide-react';
+import useTransientWillChange from '../hooks/useTransientWillChange';
 
 const featureItems = [
   {
@@ -19,12 +20,16 @@ const featureItems = [
   }
 ];
 
-const FinMindSection = () => {
-  const sectionRef = useRef(null);
+const FinMindSection = forwardRef((_, forwardedRef) => {
   const [introVisible, setIntroVisible] = useState(false);
   const [featureVisible, setFeatureVisible] = useState(() => featureItems.map(() => false));
   const [qaVisible, setQaVisible] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
+  const animationsActive = useMemo(
+    () => introVisible || featureVisible.some(Boolean) || qaVisible || ctaVisible,
+    [introVisible, featureVisible, qaVisible, ctaVisible]
+  );
+  const sectionRef = useTransientWillChange(forwardedRef, 'transform', { active: animationsActive });
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -63,11 +68,12 @@ const FinMindSection = () => {
       observer.disconnect();
       timeouts.forEach(clearTimeout);
     };
-  }, []);
+  }, [sectionRef]);
 
   return (
     <section
       ref={sectionRef}
+      data-section="finmind"
       className="finmind-section relative flex items-center justify-center py-28 md:py-36 overflow-hidden"
       style={{
         transform: 'translateY(var(--finmind-translate, 0px)) scale(var(--finmind-scale, 1))',
@@ -173,16 +179,25 @@ const FinMindSection = () => {
         </div>
       </div>
 
+      <div className="finmind-workflow-bridge" aria-hidden="true" />
+
       <style jsx>{`
         .finmind-section {
           content-visibility: auto;
-          contain: layout paint style;
+          contain: layout paint size style;
           contain-intrinsic-size: 960px 1200px;
+          overflow: clip;
         }
 
         .finmind-aura {
           position: absolute;
-          inset: -35% -25% -20%;
+          width: min(60vw, 960px);
+          height: min(60vw, 960px);
+          top: 45%;
+          left: 50%;
+          transform: translate(-50%, -45%);
+          overflow: hidden;
+          border-radius: 50%;
           background: radial-gradient(circle at center,
             rgba(239, 68, 68, 0.48),
             rgba(30, 0, 0, 0.8) 48%,
@@ -215,6 +230,7 @@ const FinMindSection = () => {
           border: 1px solid rgba(248, 113, 113, 0.18);
           background: linear-gradient(155deg, rgba(15, 15, 15, 0.85), rgba(60, 6, 6, 0.6));
           box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.12);
+          overflow: hidden;
         }
 
         .finmind-node__glow {
@@ -277,9 +293,24 @@ const FinMindSection = () => {
             grid-column: span 1;
           }
         }
+
+        .finmind-workflow-bridge {
+          position: absolute;
+          left: 50%;
+          bottom: -12vh;
+          width: 140vw;
+          max-width: 1600px;
+          height: clamp(200px, 24vh, 340px);
+          background: radial-gradient(ellipse at center, rgba(248, 113, 113, 0.32) 0%, rgba(34, 4, 4, 0.82) 45%, rgba(0, 0, 0, 0) 88%);
+          pointer-events: none;
+          transition: opacity 0.45s ease, transform 0.45s ease;
+          opacity: var(--bridge-opacity, 0);
+          transform: translate(-50%, calc(var(--bridge-opacity, 0) * -20px));
+          z-index: 4;
+        }
       `}</style>
     </section>
   );
-};
+});
 
 export default FinMindSection;

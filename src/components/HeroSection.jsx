@@ -239,16 +239,16 @@ const HeroSection = () => {
             transform: rotateX(18deg) rotateY(0deg);
           }
           50% {
-            transform: rotateX(18deg) rotateY(-180deg);
+            transform: rotateX(18deg) rotateY(180deg);
           }
           100% {
-            transform: rotateX(18deg) rotateY(-360deg);
+            transform: rotateX(18deg) rotateY(360deg);
           }
         }
 
         @keyframes marqueeSlide {
-          0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
 
         .hero-logo::before,
