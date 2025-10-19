@@ -118,6 +118,7 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
       }
     `}</style>
   </section>
-));
+  );
+});
 
 export default TechStackSection;
