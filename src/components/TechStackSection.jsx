@@ -4,15 +4,15 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
   const duplicatedStack = [...techStack, ...techStack];
 
   return (
-  <section
-    ref={ref}
-    data-section="techstack"
-    className="techstack-section pt-6 pb-0"
-    style={{
-      opacity: 'var(--techstack-opacity, 1)',
-      transition: 'opacity 0.6s ease'
-    }}
-  >
+    <section
+      ref={ref}
+      data-section="techstack"
+      className="techstack-section pt-6 pb-0"
+      style={{
+        opacity: 'var(--techstack-opacity, 1)',
+        transition: 'opacity 0.6s ease'
+      }}
+    >
     <div className="container mx-auto px-6 pb-8">
       <h2 className="text-4xl md:text-6xl font-black text-center mb-6 bg-gradient-to-r from-red-500 to-white bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(239,68,68,0.35)]">
         Powered By Innovation
@@ -43,8 +43,14 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
         content-visibility: auto;
         contain: layout paint size style;
         contain-intrinsic-size: 640px 220px;
-        padding: clamp(1.25rem, 3.5vw, 2.5rem) 0 3.5rem;
+        padding: 3.5rem 0 3.5rem; /* fixed top spacing keeps heading close to workflow section on small viewports */
         margin: 0;
+      }
+
+      @media (min-width: 768px) {
+        .techstack-section {
+          padding-top: 4.5rem; /* restore slightly larger lead-in on medium+ screens without depending on vw */
+        }
       }
 
       .tech-marquee {
@@ -61,7 +67,7 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
         align-items: center;
         gap: clamp(2rem, 4vw, 3.5rem);
         min-width: 200%;
-        transform: translateX(0);
+        transform: translateX(-50%);
         animation: techMarqueeSlide 22s linear infinite;
         will-change: transform;
       }
@@ -103,10 +109,10 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
 
       @keyframes techMarqueeSlide {
         0% {
-          transform: translateX(0);
+          transform: translateX(-50%);
         }
         100% {
-          transform: translateX(-50%);
+          transform: translateX(0);
         }
       }
 
@@ -117,7 +123,7 @@ const TechStackSection = forwardRef(({ techStack }, ref) => {
         }
       }
     `}</style>
-  </section>
+    </section>
   );
 });
 

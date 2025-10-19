@@ -100,7 +100,9 @@ const Portfolio = () => {
 
     const applyMetrics = (value) => {
       const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
-      const overlap = viewportHeight * 0.25;
+      const viewportWidth = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 0);
+      const isLargeViewport = viewportWidth >= 1280;
+      const overlap = viewportHeight * 0.18; // speed up transitions by shrinking the shared region
 
       const heroNode = heroSectionRef.current;
       const finmindNode = finmindSectionRef.current;
@@ -125,18 +127,21 @@ const Portfolio = () => {
       const heroOpacityValue = clamp(1 - heroFadeOut, 0, 1);
       const heroProgress = clamp(heroFadeOut, 0, 1);
 
-      const finmindFadeIn = smoothstep(finmindStart, finmindStart + overlap, value);
+      const finmindFadeIn = smoothstep(finmindStart, finmindStart + overlap * 0.8, value);
       const finmindFadeOut = smoothstep(finmindEnd - overlap, finmindEnd, value);
       const finmindPlateau = value >= finmindStart + overlap && value <= finmindEnd - overlap ? 1 : 0;
-      const finmindOpacityValue = clamp(finmindFadeIn * (1 - finmindFadeOut) + finmindPlateau, 0, 1);
+      const finmindOpacityRaw = clamp(finmindFadeIn * (1 - finmindFadeOut) + finmindPlateau, 0, 1);
+      const finmindOpacityValue = isLargeViewport ? finmindOpacityRaw : 1;
 
-      const workflowOpacityValue = smoothstep(workflowStart, workflowStart + overlap, value);
+      const workflowOpacityRaw = smoothstep(workflowStart, workflowStart + overlap * 0.8, value);
+      const workflowOpacityValue = isLargeViewport ? workflowOpacityRaw : 1;
 
       const techStackProgress = smoothstep(techstackStart, techstackEnd, value);
 
       const gradientReveal = smoothstep(finmindStart - overlap * 0.4, finmindStart + overlap * 0.4, value);
-      const bridgeProgress = smoothstep(finmindEnd - overlap, finmindEnd, value) * clamp(1 - workflowOpacityValue, 0, 1);
-      const capOpacity = clamp(1 - workflowOpacityValue, 0, 1);
+      const bridgeProgressRaw = smoothstep(finmindEnd - overlap, finmindEnd, value);
+      const bridgeProgress = isLargeViewport ? bridgeProgressRaw * clamp(1 - workflowOpacityRaw, 0, 1) : 0;
+      const capOpacity = isLargeViewport ? clamp(1 - workflowOpacityRaw, 0, 1) : 0;
 
       if (activity.hero && heroNode) {
         const heroScale = Math.max(0.42, 1 - heroProgress * 0.6);
@@ -148,8 +153,8 @@ const Portfolio = () => {
       }
 
       if (activity.finmind && finmindNode) {
-        const finmindScale = 0.86 + finmindOpacityValue * 0.14;
-        const finmindOffset = (1 - finmindOpacityValue) * 120;
+        const finmindScale = isLargeViewport ? 0.86 + finmindOpacityRaw * 0.14 : 1;
+        const finmindOffset = isLargeViewport ? (1 - finmindOpacityRaw) * 120 : 0;
         const direction = scrollDirectionRef.current;
         const finmindTranslate = direction >= 0
           ? finmindOffset
@@ -166,8 +171,8 @@ const Portfolio = () => {
       }
 
       if (activity.workflow && workflowNode) {
-        const workflowTranslate = Math.min((1 - workflowOpacityValue) * 140, 140);
-        const workflowScale = 0.82 + workflowOpacityValue * 0.18;
+        const workflowTranslate = isLargeViewport ? Math.min((1 - workflowOpacityRaw) * 140, 140) : 0;
+        const workflowScale = isLargeViewport ? 0.82 + workflowOpacityRaw * 0.18 : 1;
 
         setNumericVar('workflowTranslate', workflowNode, '--workflow-translate', workflowTranslate, { precision: 2, threshold: 0.75, suffix: 'px' });
         setNumericVar('workflowScale', workflowNode, '--workflow-scale', workflowScale, { threshold: 0.002 });

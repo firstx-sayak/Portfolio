@@ -9,16 +9,11 @@ const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleForm
     <section
       ref={sectionRef}
       data-section="workflow"
-      className="workflow-section relative min-h-screen flex items-center justify-center py-20 mt-0 lg:mt-[-6rem]"
-      style={{
-        transform: 'translateY(var(--workflow-translate, 0px)) scale(var(--workflow-scale, 1))',
-        opacity: 'var(--workflow-opacity, 1)',
-        transition: 'transform 0.6s ease, opacity 0.6s ease'
-      }}
+      className="workflow-section relative flex flex-col gap-12 py-16 lg:py-20"
     >
-      <div className="container mx-auto px-6 pb-24 lg:pb-16">
-        <div className="workflow-intro text-center mb-16">
-          <h2 className="text-5xl md:text-7xl font-black mb-8 bg-gradient-to-r from-white to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_45px_rgba(239,68,68,0.35)]">
+      <div className="container mx-auto px-6">
+        <div className="workflow-intro text-center mb-12">
+          <h2 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-white to-red-500 bg-clip-text text-transparent drop-shadow-[0_0_45px_rgba(239,68,68,0.35)]">
             AI Workflow Solutions
           </h2>
           <p className="text-2xl md:text-3xl text-gray-300/90 max-w-4xl mx-auto leading-relaxed">
@@ -26,7 +21,7 @@ const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleForm
           </p>
         </div>
 
-        <div className="workflow-grid grid md:grid-cols-3 gap-8 mb-16">
+        <div className="workflow-grid grid md:grid-cols-3 gap-8 mb-12">
           <div className="workflow-card">
             <Brain className="w-12 h-12 text-red-500 mb-4" />
             <h3 className="text-2xl font-bold mb-4">Intelligent Automation</h3>
@@ -46,7 +41,7 @@ const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleForm
           </div>
         </div>
 
-        <div className="workflow-cta max-w-2xl mx-auto bg-gradient-to-b from-gray-900/82 to-black/80 p-8 rounded-2xl border border-red-500/30 shadow-2xl backdrop-blur-sm transition-transform duration-500">
+        <div className="workflow-cta max-w-2xl mx-auto bg-gradient-to-b from-gray-900/82 to-black/80 p-8 rounded-2xl border border-red-500/30 shadow-2xl backdrop-blur-sm">
           <h3 className="text-3xl font-bold text-center mb-8 text-red-500 tracking-wide">Let's Build Something Amazing</h3>
 
           <div className="space-y-6">
@@ -93,75 +88,66 @@ const WorkflowSolutionsSection = forwardRef(({ formData, setFormData, handleForm
             </button>
           </div>
         </div>
-    </div>
+      </div>
 
-    <div className="workflow-transition-cap" aria-hidden="true" />
+      <div className="workflow-transition-cap" aria-hidden="true" />
 
-    <style jsx>{`
-      .workflow-section {
-        content-visibility: auto;
-        contain: layout paint size style;
-        contain-intrinsic-size: 960px 1000px;
-        overflow: clip;
-        --wf-progress: var(--workflow-opacity, 0);
-        background: linear-gradient(180deg, rgba(32, 0, 0, 0.68) 0%, rgba(12, 0, 0, 0.9) 45%, rgba(0, 0, 0, 1) 100%);
-      }
+      <style jsx>{`
+        .workflow-section {
+          background: linear-gradient(180deg, rgba(32, 0, 0, 0.68) 0%, rgba(12, 0, 0, 0.9) 45%, rgba(0, 0, 0, 1) 100%);
+        }
 
-      .workflow-intro {
-        opacity: calc(0.25 + var(--wf-progress) * 0.75);
-        transform: translateY(calc((1 - var(--wf-progress)) * 48px));
-        transition: transform 0.6s ease, opacity 0.6s ease;
-      }
+        .workflow-card {
+          background: linear-gradient(165deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.82));
+          border: 1px solid rgba(248, 113, 113, 0.3);
+          padding: 2rem;
+          border-radius: 1rem;
+          transition: transform 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
+          overflow: hidden;
+        }
 
-      .workflow-grid {
-        gap: clamp(1.5rem, 3vw, 2.5rem);
-      }
+        .workflow-card:hover {
+          transform: translateY(-12px);
+          border-color: rgba(248, 113, 113, 0.55);
+          box-shadow: 0 22px 45px rgba(239, 68, 68, 0.25);
+        }
 
-      .workflow-card {
-        background: linear-gradient(165deg, rgba(127, 29, 29, 0.22), rgba(0, 0, 0, 0.82));
-        border: 1px solid rgba(248, 113, 113, 0.3);
-        padding: 2rem;
-        border-radius: 1rem;
-        transition:
-          transform 0.45s ease,
-          box-shadow 0.45s ease,
-          border-color 0.45s ease,
-          opacity 0.6s ease;
-        overflow: hidden;
-        opacity: calc(0.25 + var(--wf-progress) * 0.75);
-        transform: translateY(calc((1 - var(--wf-progress)) * 80px));
-      }
+        .workflow-transition-cap {
+          display: none;
+        }
 
-      .workflow-card:hover {
-        transform: translateY(-12px);
-        border-color: rgba(248, 113, 113, 0.55);
-        box-shadow: 0 22px 45px rgba(239, 68, 68, 0.25);
-      }
+        @media (min-width: 1280px) {
+          .workflow-section {
+            overflow: hidden;
+            position: relative;
+          }
 
-      .workflow-cta {
-        overflow: hidden;
-        opacity: calc(0.25 + var(--wf-progress) * 0.75);
-        transform: translateY(calc((1 - var(--wf-progress)) * 65px));
-        transition: transform 0.6s ease, opacity 0.6s ease;
-      }
+          .workflow-intro,
+          .workflow-grid,
+          .workflow-cta {
+            transform: translateY(calc((1 - var(--workflow-opacity, 1)) * 40px));
+            opacity: var(--workflow-opacity, 1);
+            transition: transform 0.4s ease, opacity 0.4s ease;
+          }
 
-      .workflow-transition-cap {
-        position: absolute;
-        top: -10vh;
-        left: 50%;
-        width: 160vw;
-        max-width: 2000px;
-        height: clamp(220px, 26vh, 380px);
-        background:
-          radial-gradient(ellipse at center, rgba(236, 62, 62, 0.34) 0%, rgba(18, 2, 2, 0.85) 52%, rgba(0, 0, 0, 0) 88%);
-        pointer-events: none;
-        opacity: var(--cap-opacity, 0);
-        transform: translateX(-50%);
-        transition: opacity 0.45s ease;
-      }
-    `}</style>
-  </section>
-);
+        .workflow-transition-cap {
+          display: block;
+          position: absolute;
+          top: -3rem;
+          left: 50%;
+          width: 160vw;
+          max-width: 2000px;
+          height: clamp(140px, 18vh, 260px);
+          background: radial-gradient(ellipse at center, rgba(236, 62, 62, 0.34) 0%, rgba(18, 2, 2, 0.85) 52%, rgba(0, 0, 0, 0) 88%);
+          pointer-events: none;
+          transform: translate(-50%, 0);
+          opacity: var(--cap-opacity, 0);
+          transition: opacity 0.35s ease;
+        }
+        }
+      `}</style>
+    </section>
+  );
 });
 
 export default WorkflowSolutionsSection;
