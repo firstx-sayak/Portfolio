@@ -265,7 +265,7 @@ const HeroSection = memo(function HeroSection() {
               transform: 'perspective(1200px) rotateX(6deg)'
             }}
           >
-            Data Scientist | AI Innovator | Founder
+            Data Scientist | AI Architect 
           </p>
 
           <div className="pt-8">
